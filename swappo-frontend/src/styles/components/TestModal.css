@@ -1,0 +1,10 @@
+
+.test-modal-content {
+  padding: 1rem;
+}
+
+.test-modal-text {
+  color: var(--foreground, #1f2937);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}

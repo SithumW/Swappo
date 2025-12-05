@@ -1,0 +1,1325 @@
+#Swagger is used for the documentation
+
+openapi: 3.0.0
+info:
+  title: Swappo Trading API
+  description: Complete API documentation for the Swappo non-monetary trading platform
+  version: 1.0.0
+  contact:
+    name: Swappo Team
+    email: support@swappo.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://your-domain.com/api
+    description: Production server
+
+security:
+  - BetterAuth: []
+
+paths:
+
+# Health
+  /health:
+    get:
+      tags: [System]
+      summary: Health check endpoint
+      description: Check if the API is running
+      responses:
+        200:
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Swappo API is running!"
+
+  # Authentication 
+  /auth/sign-up/email:
+    post:
+      tags: [Authentication]
+      summary: Register a new user
+      description: Create a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                  minLength: 3
+                  example: "john_trader"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "password123"
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          $ref: '#/components/responses/BadRequest'
+  /auth/sign-in/email:
+    post:
+      tags: [Authentication]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "test@example.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        401:
+          description: Invalid credentials
+  /auth/session:
+    get:
+      tags: [Authentication]
+      summary: Get current session
+      security:
+        - BetterAuth: []
+      responses:
+        200:
+          description: Session information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout current user
+      security:
+        - BetterAuth: []
+      responses:
+        200:
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  # User 
+  /users/profile/{userId}:
+    get:
+      tags: [Users]
+      summary: Get user profile by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "clu1234567890"
+      responses:
+        200:
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      security:
+        - BetterAuth: []
+      responses:
+        200:
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+
+
+  /users/profile:
+    put:
+      tags: [Users]
+      summary: Update user profile
+      security:
+        - BetterAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                bio:
+                  type: string
+                profile_picture:
+                  type: string
+      responses:
+        200:
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+
+  /users/{userId}/items:
+    get:
+      tags: [Users]
+      summary: Get user's items
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [AVAILABLE, RESERVED, SWAPPED, REMOVED, ALL]
+            default: AVAILABLE
+      responses:
+        200:
+          description: List of user's items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+
+
+
+
+  /users/{userId}/trades:
+    get:
+      tags: [Users]
+      summary: Get user's trade history
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of user's trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trade'
+
+
+
+  /users/{userId}/reviews:
+    get:
+      tags: [Users]
+      summary: Get user's reviews
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User's reviews and rating summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rating'
+                  average_rating:
+                    type: number
+                    format: float
+                  total_reviews:
+                    type: integer
+
+
+
+  /users/leaderboard:
+    get:
+      tags: [Users]
+      summary: Get leaderboard of top users
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        200:
+          description: List of top users by loyalty points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+
+
+  /users/search:
+    get:
+      tags: [Users]
+      summary: Search users
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+      responses:
+        200:
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+
+
+
+  # Items 
+  /items:
+    get:
+      tags: [Items]
+      summary: Get all available items (marketplace)
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: condition
+          in: query
+          schema:
+            type: string
+            enum: [NEW, GOOD, FAIR, POOR]
+        - name: latitude
+          in: query
+          schema:
+            type: number
+            format: float
+            minimum: -90
+            maximum: 90
+        - name: longitude
+          in: query
+          schema:
+            type: number
+            format: float
+            minimum: -180
+            maximum: 180
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: exclude_user
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: Paginated list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Item'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+
+    post:
+      tags: [Items]
+      summary: Create new item
+      security:
+        - BetterAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [title, description, category, condition]
+              properties:
+                title:
+                  type: string
+                  minLength: 3
+                description:
+                  type: string
+                  minLength: 10
+                category:
+                  type: string
+                condition:
+                  type: string
+                  enum: [NEW, GOOD, FAIR, POOR]
+                latitude:
+                  type: number
+                  format: float
+                  minimum: -90
+                  maximum: 90
+                longitude:
+                  type: number
+                  format: float
+                  minimum: -180
+                  maximum: 180
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  maxItems: 5
+      responses:
+        201:
+          description: Item created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /items/{itemId}:
+    get:
+      tags: [Items]
+      summary: Get item details with trade requests
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Item details with trade requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Item'
+                  - type: object
+                    properties:
+                      trade_requests_for:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TradeRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Items]
+      summary: Update item
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                condition:
+                  type: string
+                  enum: [NEW, GOOD, FAIR, POOR]
+                latitude:
+                  type: number
+                  format: float
+                  minimum: -90
+                  maximum: 90
+                longitude:
+                  type: number
+                  format: float
+                  minimum: -180
+                  maximum: 180
+                removeImageIds:
+                  type: string
+                  description: JSON array of image IDs to remove
+                newImages:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+
+
+      responses:
+        200:
+          description: Item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Items]
+      summary: Delete item
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Item deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        400:
+          description: Cannot delete item with pending trades
+        404:
+          $ref: '#/components/responses/NotFound'
+
+
+
+
+  /items/meta/categories:
+    get:
+      tags: [Items]
+      summary: Get all available categories
+      responses:
+        200:
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["Electronics", "Furniture", "Clothing", "Books"]
+
+
+
+  /items/{itemId}/status:
+    patch:
+      tags: [Items]
+      summary: Toggle item status
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [AVAILABLE, REMOVED]
+      responses:
+        200:
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+
+
+
+  # Trade
+  /trades/request:
+    post:
+      tags: [Trades]
+      summary: Create trade request
+      security:
+        - BetterAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requested_item_id, offered_item_id]
+              properties:
+                requested_item_id:
+                  type: string
+                offered_item_id:
+                  type: string
+      responses:
+        201:
+          description: Trade request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradeRequest'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+
+
+  /trades/accept/{requestId}:
+    post:
+      tags: [Trades]
+      summary: Accept trade request
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Trade request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trade'
+        403:
+          $ref: '#/components/responses/Forbidden'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+
+
+  /trades/reject/{requestId}:
+    post:
+      tags: [Trades]
+      summary: Reject trade request
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Trade request rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+
+
+
+  /trades/complete/{tradeId}:
+    post:
+      tags: [Trades]
+      summary: Complete trade
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: tradeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Trade completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  trade:
+                    $ref: '#/components/schemas/Trade'
+
+  /trades/cancel/{tradeId}:
+    post:
+      tags: [Trades]
+      summary: Cancel trade
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: tradeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Trade cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+
+
+  /trades/my-trades:
+    get:
+      tags: [Trades]
+      summary: Get user's trades
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, COMPLETED, FAILED, CANCELLED]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [as_requester, as_owner]
+      responses:
+        200:
+          description: List of user's trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trade'
+
+  /trades/requests/received:
+    get:
+      tags: [Trades]
+      summary: Get trade requests received
+      security:
+        - BetterAuth: []
+      responses:
+        200:
+          description: List of received trade requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TradeRequest'
+
+  /trades/requests/sent:
+    get:
+      tags: [Trades]
+      summary: Get trade requests sent
+      security:
+        - BetterAuth: []
+      responses:
+        200:
+          description: List of sent trade requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TradeRequest'
+
+
+
+
+
+  # Rating 
+  /ratings:
+    post:
+      tags: [Ratings]
+      summary: Create rating/review
+      security:
+        - BetterAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [trade_id, reviewee_id, rating]
+              properties:
+                trade_id:
+                  type: string
+                reviewee_id:
+                  type: string
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        201:
+          description: Rating created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+
+
+  /ratings/trade/{tradeId}:
+    get:
+      tags: [Ratings]
+      summary: Get ratings for a trade
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: tradeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Trade ratings information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ratings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rating'
+                  user_has_rated:
+                    type: boolean
+                  can_rate:
+                    type: boolean
+                  user_rating:
+                    $ref: '#/components/schemas/Rating'
+                  other_rating:
+                    $ref: '#/components/schemas/Rating'
+
+  /ratings/user/{userId}/summary:
+    get:
+      tags: [Ratings]
+      summary: Get user's rating summary
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User rating summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  average_rating:
+                    type: number
+                    format: float
+                  total_ratings:
+                    type: integer
+                  rating_distribution:
+                    type: object
+                    properties:
+                      "1":
+                        type: integer
+                      "2":
+                        type: integer
+                      "3":
+                        type: integer
+                      "4":
+                        type: integer
+                      "5":
+                        type: integer
+                  recent_ratings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rating:
+                          type: integer
+                        created_at:
+                          type: string
+                          format: date-time
+
+
+
+  /ratings/{ratingId}:
+    put:
+      tags: [Ratings]
+      summary: Update rating (within 24 hours)
+      security:
+        - BetterAuth: []
+      parameters:
+        - name: ratingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        200:
+          description: Rating updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+        400:
+          description: Rating can only be edited within 24 hours
+
+
+
+
+components:
+  securitySchemes:
+    BetterAuth:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+      description: BetterAuth session cookie
+
+
+
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "clu1234567890"
+        username:
+          type: string
+          example: "john_trader"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        profile_picture:
+          type: string
+          nullable: true
+          example: "/uploads/profiles/avatar.jpg"
+        bio:
+          type: string
+          nullable: true
+          example: "Love trading electronics and books!"
+        loyalty_points:
+          type: integer
+          example: 150
+        badge:
+          type: string
+          enum: [BRONZE, SILVER, GOLD, DIAMOND, RUBY]
+          example: "GOLD"
+        date_joined:
+          type: string
+          format: date-time
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+
+
+
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "cli1234567890"
+        user_id:
+          type: string
+          example: "clu1234567890"
+        title:
+          type: string
+          example: "iPhone 12 - Excellent Condition"
+        description:
+          type: string
+          example: "Barely used iPhone 12, comes with original box and charger"
+        category:
+          type: string
+          example: "Electronics"
+        condition:
+          type: string
+          enum: [NEW, GOOD, FAIR, POOR]
+          example: "GOOD"
+        status:
+          type: string
+          enum: [AVAILABLE, RESERVED, SWAPPED, REMOVED]
+          example: "AVAILABLE"
+        latitude:
+          type: number
+          format: float
+          nullable: true
+          minimum: -90
+          maximum: 90
+          example: 6.9271
+        longitude:
+          type: number
+          format: float
+          nullable: true
+          minimum: -180
+          maximum: 180
+          example: 79.8612
+        posted_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemImage'
+        _count:
+          type: object
+          properties:
+            trade_requests_for:
+              type: integer
+
+
+
+    ItemImage:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "img1234567890"
+        item_id:
+          type: string
+          example: "cli1234567890"
+        url:
+          type: string
+          example: "/uploads/items/image.jpg"
+
+
+    TradeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "tr1234567890"
+        requested_item_id:
+          type: string
+          example: "cli1234567890"
+        offered_item_id:
+          type: string
+          example: "cli0987654321"
+        requester_id:
+          type: string
+          example: "clu1234567890"
+        status:
+          type: string
+          enum: [PENDING, ACCEPTED, REJECTED, CANCELLED]
+          example: "PENDING"
+        requested_at:
+          type: string
+          format: date-time
+        requested_item:
+          $ref: '#/components/schemas/Item'
+        offered_item:
+          $ref: '#/components/schemas/Item'
+        requester:
+          $ref: '#/components/schemas/User'
+
+    Trade:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "trd1234567890"
+        trade_request_id:
+          type: string
+          example: "tr1234567890"
+        requested_item_id:
+          type: string
+          example: "cli1234567890"
+        offered_item_id:
+          type: string
+          example: "cli0987654321"
+        requester_id:
+          type: string
+          example: "clu1234567890"
+        owner_id:
+          type: string
+          example: "clu0987654321"
+        location:
+          type: string
+          nullable: true
+          example: "Colombo Central Park"
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, CANCELLED]
+          example: "PENDING"
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        requested_item:
+          $ref: '#/components/schemas/Item'
+        offered_item:
+          $ref: '#/components/schemas/Item'
+        requester:
+          $ref: '#/components/schemas/User'
+        owner:
+          $ref: '#/components/schemas/User'
+        ratings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rating'
+
+
+
+
+    Rating:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "rat1234567890"
+        trade_id:
+          type: string
+          example: "trd1234567890"
+        reviewer_id:
+          type: string
+          example: "clu1234567890"
+        reviewee_id:
+          type: string
+          example: "clu0987654321"
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          nullable: true
+          example: "Great trader, very reliable!"
+        created_at:
+          type: string
+          format: date-time
+        reviewer:
+          $ref: '#/components/schemas/User'
+        reviewee:
+          $ref: '#/components/schemas/User'
+        trade:
+          type: object
+          properties:
+            requested_item:
+              type: object
+              properties:
+                title:
+                  type: string
+            offered_item:
+              type: object
+              properties:
+                title:
+                  type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Error message"
+        message:
+          type: string
+          example: "Detailed error description"
+
+    Success:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operation completed successfully"
+
+    PaginatedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 20
+            total:
+              type: integer
+              example: 150
+            pages:
+              type: integer
+              example: 8
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Validation failed"
+            message: "Required fields are missing"
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+            message: "Authentication required"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Forbidden"
+            message: "Access denied"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Not found"
+            message: "Resource does not exist"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Internal server error"
+            message: "Something went wrong"
+
+
+
+
+
+
+tags:
+  - name: System
+    description: System health and information endpoints
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User management and profile operations
+  - name: Items
+    description: Item listing and management
+  - name: Trades
+    description: Trade requests and management
+  - name: Ratings
+    description: Rating and review system

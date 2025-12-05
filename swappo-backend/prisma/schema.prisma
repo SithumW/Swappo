@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Existing BetterAuth tables - keeping structure unchanged
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+
+  // Additional Swappo fields
+  username       String?   @unique
+  password_hash  String?
+  profile_picture String?
+  latitude       Float?    // GPS latitude coordinate
+  longitude      Float?    // GPS longitude coordinate
+  bio            String?  // optional
+  loyalty_points Int      @default(0) // accumulated from successful trades & ratings
+  badge          Badge    @default(BRONZE) // Bronze, Silver, Gold, Diamond, Ruby
+  date_joined    DateTime @default(now())
+  last_login     DateTime?
+
+  // Swappo Relations
+  items                Item[]
+  trade_requests_made  TradeRequest[] @relation("TradeRequester")
+  trades_as_requester  Trade[]        @relation("TradeRequester")
+  trades_as_owner      Trade[]        @relation("TradeOwner")
+  swapped_items        SwappedItem[]
+  reviews_given        Rating[]       @relation("Reviewer")
+  reviews_received     Rating[]       @relation("Reviewee")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+// Swappo Enums
+enum ItemCondition {
+  NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum ItemStatus {
+  AVAILABLE
+  RESERVED
+  SWAPPED
+  REMOVED
+}
+
+enum TradeRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum TradeStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum Badge {
+  BRONZE
+  SILVER
+  GOLD
+  DIAMOND
+  RUBY
+}
+
+// Items/Listings - each item posted by a user
+model Item {
+  id              String        @id @default(cuid())
+  user_id         String        // FK → Users
+  title           String
+  description     String
+  category        String
+  condition       ItemCondition // new, good, fair, poor
+  status          ItemStatus    @default(AVAILABLE) // available, reserved, swapped, removed
+  phone_number    String        @default("") // Required contact phone number
+  whatsapp_number String?       // Optional WhatsApp number
+  latitude        Float?        // GPS latitude coordinate
+  longitude       Float?        // GPS longitude coordinate
+  posted_at       DateTime      @default(now())
+  
+  // Relations
+  user                   User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  images                 ItemImage[]    // separate item_images table
+  trade_requests_for     TradeRequest[] @relation("RequestedItem")
+  trade_requests_offered TradeRequest[] @relation("OfferedItem")
+  trades_as_requested    Trade[]        @relation("RequestedItem")
+  trades_as_offered      Trade[]        @relation("OfferedItem")
+  swapped_items          SwappedItem[]
+  
+  @@map("items")
+}
+
+// Item Images - separate table for item images
+model ItemImage {
+  id      String @id @default(cuid())
+  item_id String
+  url     String // image URL or path
+  
+  item Item @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  
+  @@map("item_images")
+}
+
+// Trade Requests - all requests for a particular item (publicly visible)
+model TradeRequest {
+  id                String             @id @default(cuid())
+  requested_item_id String             // FK → Items → the item being requested
+  offered_item_id   String             // FK → Items → the item being offered in exchange
+  requester_id      String             // FK → Users → who offered the trade
+  status            TradeRequestStatus @default(PENDING) // pending, accepted, rejected, cancelled
+  requested_at      DateTime           @default(now())
+  
+  // Relations
+  requested_item Item @relation("RequestedItem", fields: [requested_item_id], references: [id], onDelete: Cascade)
+  offered_item   Item @relation("OfferedItem", fields: [offered_item_id], references: [id], onDelete: Cascade)
+  requester      User @relation("TradeRequester", fields: [requester_id], references: [id], onDelete: Cascade)
+  
+  // A trade request becomes a trade when accepted
+  trade Trade?
+  
+  @@map("trade_requests")
+}
+
+// Trades/Successful Exchanges - when owner accepts one trade request, it becomes a trade
+model Trade {
+  id                  String      @id @default(cuid())
+  trade_request_id    String      @unique
+  requested_item_id   String      // FK → Items
+  offered_item_id     String      // FK → Items
+  requester_id        String      // FK → Users
+  owner_id            String      // FK → Users
+  location            String?     // exchange meetup location → pulled from owner's item location
+  status              TradeStatus @default(PENDING) // pending, completed, failed, cancelled
+  completed_at        DateTime?
+  created_at          DateTime    @default(now())
+  
+  // Relations
+  trade_request    TradeRequest  @relation(fields: [trade_request_id], references: [id], onDelete: Cascade)
+  requested_item   Item          @relation("RequestedItem", fields: [requested_item_id], references: [id])
+  offered_item     Item          @relation("OfferedItem", fields: [offered_item_id], references: [id])
+  requester        User          @relation("TradeRequester", fields: [requester_id], references: [id])
+  owner            User          @relation("TradeOwner", fields: [owner_id], references: [id])
+  swapped_items    SwappedItem[]
+  ratings          Rating[]
+  
+  @@map("trades")
+}
+
+// Swapped Items History - keep track of items each user has successfully traded
+model SwappedItem {
+  id         String   @id @default(cuid())
+  trade_id   String   // FK → Trades
+  user_id    String   // FK → Users
+  item_id    String   // FK → Items
+  swapped_at DateTime @default(now())
+  
+  // Relations
+  trade Trade @relation(fields: [trade_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id])
+  item  Item  @relation(fields: [item_id], references: [id])
+  
+  @@map("swapped_items")
+}
+
+// Ratings & Reviews - users rate each other after a successful trade
+model Rating {
+  id          String   @id @default(cuid())
+  trade_id    String   // FK → Trades
+  reviewer_id String   // FK → Users
+  reviewee_id String   // FK → Users
+  rating      Int      // 1–5 stars
+  comment     String?  // optional
+  created_at  DateTime @default(now())
+  
+  // Relations
+  trade    Trade @relation(fields: [trade_id], references: [id], onDelete: Cascade)
+  reviewer User  @relation("Reviewer", fields: [reviewer_id], references: [id])
+  reviewee User  @relation("Reviewee", fields: [reviewee_id], references: [id])
+  
+  // Each user can only rate once per trade
+  @@unique([trade_id, reviewer_id])
+  @@map("ratings")
+}

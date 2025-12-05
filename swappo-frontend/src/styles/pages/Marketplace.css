@@ -1,0 +1,126 @@
+.marketplace {
+  min-height: 100vh;
+  background-color: #f7f7f7;
+  font-family: Arial, sans-serif;
+}
+
+.marketplace-main {
+
+  margin: 0 auto;
+  width: 85%;
+  padding: 2rem 1rem;
+}
+
+.welcome-section h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.1rem;
+}
+
+.welcome-section p {
+  color: #6b7280;
+  margin-bottom: 50px;
+}
+
+.filters-card {
+  margin-bottom: 2rem;
+}
+
+.filters-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+
+
+.filters-left {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+
+
+
+.filter-group {
+  display: flex;
+  flex-direction: column; 
+  flex: 1;                
+  min-width: 100px;       
+}
+
+
+.filter-group .search-input {
+  width: 300%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+}
+
+
+.filters-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.view-mode-buttons button {
+  margin-right: 0.25rem;
+}
+
+.action-buttons button {
+  margin-left: 0.5rem;
+}
+
+.items-grid.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1.5rem;
+}
+
+.items-grid.list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem 0;
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.empty-state-card {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-state-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-card p {
+  margin-bottom: 1rem;
+  color: #6b7280;
+}
+
+
+.footer-legal-links2 {
+  font-size: 14px !important;
+}
+
+.socialicon img {
+  width: 28px !important;
+  height: auto !important;
+}

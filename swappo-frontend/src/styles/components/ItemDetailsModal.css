@@ -1,0 +1,293 @@
+.modal-content {
+  min-width: 800px;
+  max-width: 100px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.5rem; 
+  font-weight: 700; 
+  color: #363636; 
+}
+
+
+.modal-title .icon {
+  color: #363636;
+  width: 24px;   
+  height: auto;  
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.image-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-wrapper {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.image-nav.prev {
+  left: 8px;
+}
+
+.image-nav.next {
+  right: 8px;
+}
+
+.image-counter {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.no-image-icon {
+  width: 48px;
+  height: 48px;
+  color: #9ca3af;
+}
+
+.thumbnails {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.thumbnail {
+  width: 64px;
+  height: 64px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.thumbnail.active {
+  border-color: #2563eb;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item-description {
+  display: flex;
+  flex-wrap: wrap; 
+  align-items: center;
+  gap: 8px;
+}
+
+
+.item-description p {
+  flex-basis: 100%;
+  margin-top: 4px;
+}
+
+
+.badge-40 {
+  display: inline-flex;
+  width: 100px;
+  min-width: 40px;
+  height: 30px;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.owner-card-content {
+  padding: 16px;
+}
+
+.owner-info {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.owner-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.owner-text h4 {
+  font-weight: 600;
+}
+
+.owner-text p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.owner-points {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.meta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.requests-card {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.requests-info {
+  display: flex;
+  align-items: center;
+  margin-top: 15px;
+  gap: 8px;
+}
+
+.trade-request {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trade-request h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.trade-request-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  background: #2563eb; 
+  color: white;
+  transition: background-color 0.15s ease;
+}
+
+.trade-request-btn:disabled {
+  opacity: 0.6;
+}
+
+
+.trade-request-btn:not(:disabled):hover {
+  background: #60a5fa; 
+}
+
+.trade-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.accept-btn {
+  background: #4189e0;
+  color: white;
+}
+
+.reject-btn {
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.own-item-card {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+}
+
+.icon.spin {
+  animation: spin 1s linear infinite;
+}
+
+.icon.primary {
+  margin-top: 12px;
+  color: #2563eb;
+}
+
+.icon.yellow {
+  margin-top: 12px;
+  color: #ca8a04;
+}
+
+.icon.orange {
+  margin-top: 12px;
+  color: #ea580c;
+}
+
+.icon.blue {
+  margin-top: 12px;
+  color: #2563eb;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

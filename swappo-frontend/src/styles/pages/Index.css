@@ -1,0 +1,35 @@
+
+.index-loading-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-color, #ffffff);
+}
+
+.index-loading-content {
+  text-align: center;
+}
+
+.index-loading-spinner {
+  height: 2rem;
+  width: 2rem;
+  border: 4px solid var(--primary-color, #2563eb);
+  border-top-color: transparent;
+  border-radius: 9999px;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.index-loading-text {
+  color: var(--muted-foreground, #6b7280);
+}

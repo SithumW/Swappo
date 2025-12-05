@@ -1,0 +1,367 @@
+
+
+.my-items-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.my-items-modal-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.my-items-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+
+.my-items-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.my-items-loading-content {
+  text-align: center;
+}
+
+.my-items-loading-spinner {
+  height: 2rem;
+  width: 2rem;
+  margin: 0 auto 0.5rem;
+  color: var(--primary-color, #2563eb);
+  animation: spin 1s linear infinite;
+}
+
+.my-items-loading-text {
+  color: var(--muted-foreground, #6b7280);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
+.my-items-error-card {
+  border: 1px solid #fecaca;
+  background-color: #fef2f2;
+  border-radius: 0.5rem;
+}
+
+.my-items-error-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.my-items-error-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+  color: #dc2626;
+}
+
+.my-items-error-title {
+  font-weight: 500;
+  color: #7f1d1d;
+}
+
+.my-items-error-message {
+  font-size: 0.875rem;
+  color: #991b1b;
+}
+
+
+.my-items-empty-card {
+  border: 2px dashed rgba(107, 114, 128, 0.25);
+  border-radius: 0.5rem;
+}
+
+.my-items-empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.my-items-empty-icon {
+  height: 4rem;
+  width: 4rem;
+  color: var(--muted-foreground, #6b7280);
+  margin-bottom: 1rem;
+}
+
+.my-items-empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.my-items-empty-description {
+  color: var(--muted-foreground, #6b7280);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.my-items-empty-button {
+  background-color: transparent;
+  color: var(--foreground, #1f2937);
+  border: 1px solid var(--border-color, #d1d5db);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.my-items-empty-button:hover {
+  background-color: var(--muted-background, #f3f4f6);
+}
+
+
+.my-items-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.my-items-card {
+  overflow: hidden;
+  background: var(--card-color, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 0.5rem;
+}
+
+.my-items-card-content {
+  padding: 0;
+}
+
+.my-items-card-layout {
+  display: flex;
+}
+
+.my-items-image-container {
+  width: 6rem;
+  height: 6rem;
+  background-color: var(--muted-background, #f9fafb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.my-items-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.my-items-image-placeholder {
+  height: 2rem;
+  width: 2rem;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.my-items-details {
+  flex: 1;
+  padding: 1rem;
+}
+
+.my-items-details-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.my-items-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.my-items-title-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.my-items-title {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.my-items-category {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 0.25rem;
+  color: var(--foreground, #1f2937);
+  background-color: transparent;
+  width: fit-content;
+}
+
+.my-items-description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground, #6b7280);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.my-items-condition {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+}
+
+.condition-new { 
+  background-color: #dcfce7; 
+  color: #166534; 
+}
+
+.condition-good { 
+  background-color: #dbeafe; 
+  color: #1e40af; 
+}
+
+.condition-fair { 
+  background-color: #fef3c7; 
+  color: #92400e; 
+}
+
+.condition-poor { 
+  background-color: #fee2e2; 
+  color: #991b1b; 
+}
+
+.my-items-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.my-items-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.my-items-date-icon {
+  height: 0.875rem;
+  width: 0.875rem;
+}
+
+.my-items-status {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+}
+
+.status-available {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-trading {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-swapped {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
+.my-items-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.my-items-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  background-color: var(--primary-color, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.my-items-edit-btn:hover {
+  background-color: var(--primary-hover, #1d4ed8);
+}
+
+.my-items-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.my-items-delete-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.my-items-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.my-items-btn-icon {
+  height: 0.875rem;
+  width: 0.875rem;
+  margin-right: 0.25rem;
+}
+
+.my-items-delete-spinner {
+  height: 0.875rem;
+  width: 0.875rem;
+  margin-right: 0.25rem;
+  animation: spin 1s linear infinite;
+}
+
+
+.my-items-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.my-items-close-btn {
+  background-color: transparent;
+  color: var(--foreground, #1f2937);
+  border: 1px solid var(--border-color, #d1d5db);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.my-items-close-btn:hover {
+  background-color: var(--muted-background, #f3f4f6);
+}

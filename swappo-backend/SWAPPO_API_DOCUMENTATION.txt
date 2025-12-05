@@ -1,0 +1,913 @@
+================================================================================
+                    SWAPPO API - COMPLETE CODEBASE OVERVIEW & UI DEVELOPMENT GUIDE
+================================================================================
+
+📋 TABLE OF CONTENTS
+====================
+1. Architecture Overview
+2. Authentication System
+3. User Module
+4. Items Module
+5. Trades Module
+6. Ratings Module
+7. File Uploads
+8. Standard Response Format
+9. Validation Schemas
+10. Middleware Stack
+11. CORS & Security
+12. Database Relationships
+13. UI Development Guidelines
+14. Getting Started
+
+================================================================================
+🏗️ ARCHITECTURE OVERVIEW
+================================================================================
+
+Stack:
+- Backend: Node.js with Express.js
+- Database: PostgreSQL with Prisma ORM
+- Authentication: Better-Auth with JWT sessions
+- File Storage: Local filesystem with Multer
+- API Documentation: OpenAPI 3.0 (Swagger)
+- Architecture Pattern: Service Layer Architecture with Validation Middleware
+
+Project Structure:
+/routes/          - API endpoint definitions
+/services/        - Business logic layer
+/validation/      - Input validation schemas
+/middleware/      - Authentication & validation middleware
+/utils/           - Response utilities & helpers
+/prisma/          - Database schema and migrations
+/uploads/         - File storage directory
+/docs/            - API documentation (Swagger YAML)
+
+================================================================================
+🔐 AUTHENTICATION SYSTEM
+================================================================================
+
+Better-Auth Integration:
+- Session Management: JWT-based with 7-day expiry
+- Email/Password: Primary authentication method
+- Auto session refresh: Every 24 hours
+- Cross-origin support: Enabled for frontend integration
+
+Key Auth Endpoints:
+POST   /api/auth/sign-up/email      # User registration
+POST   /api/auth/sign-in/email      # User login  
+GET    /api/auth/session           # Get current session
+POST   /api/auth/sign-out          # Logout
+
+Registration Request Body:
+{
+  "name": "John Trader",
+  "email": "john@example.com", 
+  "password": "password123"
+}
+
+Login Request Body:
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+Authentication Methods:
+- authMiddleware: Requires valid session (returns 401 if unauthorized)
+- optionalAuthMiddleware: Session optional (continues without blocking)
+
+================================================================================
+👤 USER MODULE
+================================================================================
+
+User Model Structure:
+{
+  id: String,           // Primary key (CUID format)
+  name: String,         // Display name
+  email: String,        // Unique email address
+  image: String?,       // Profile picture URL (optional)
+  latitude: Float?,     // GPS latitude coordinate (-90 to 90)
+  longitude: Float?,    // GPS longitude coordinate (-180 to 180)
+  bio: String?,         // User description (max 500 characters)
+  loyalty_points: Int,  // Reward points (default: 0)
+  badge: Badge,         // BRONZE/SILVER/GOLD/DIAMOND/RUBY (default: BRONZE)
+  createdAt: DateTime,  // Account creation date
+  updatedAt: DateTime,  // Last update timestamp
+  
+  // Relationship counts
+  _count: {
+    items: Int,         // Number of available items
+    trades: Int,        // Number of completed trades
+    reviews: Int        // Number of reviews received
+  }
+}
+
+User API Endpoints:
+GET    /api/users/profile/:userId   # Get user profile by ID
+GET    /api/users/me               # Get current authenticated user profile
+PUT    /api/users/profile          # Update current user profile
+GET    /api/users/:userId/items    # Get user's items with optional status filter
+GET    /api/users/:userId/trades   # Get user's trade history
+GET    /api/users/:userId/reviews  # Get user's reviews/ratings
+GET    /api/users/search           # Search users by name/email
+GET    /api/users/leaderboard      # Get top users by loyalty points
+
+Profile Update Fields (all optional):
+- name: String (2-50 characters)
+- email: String (valid email format)
+- bio: String (max 500 characters)  
+- latitude: Float (-90 to 90)
+- longitude: Float (-180 to 180)
+- profile_picture: String (URL)
+
+Search Query Parameters:
+- q: String (search term, minimum 2 characters)
+- latitude: Float (for location-based search)
+- longitude: Float (for location-based search)
+
+User Items Query Parameters:
+- status: Enum (AVAILABLE/RESERVED/SWAPPED/REMOVED/ALL, default: AVAILABLE)
+
+================================================================================
+📦 ITEMS MODULE  
+================================================================================
+
+Item Model Structure:
+{
+  id: String,           // Primary key (CUID format)
+  user_id: String,      // Owner reference
+  title: String,        // Item name (3-100 characters)
+  description: String,  // Item details (10-1000 characters)
+  category: String,     // Category name (2-50 characters)
+  condition: Enum,      // NEW/GOOD/FAIR/POOR
+  status: Enum,         // AVAILABLE/RESERVED/SWAPPED/REMOVED
+  latitude: Float?,     // Item location latitude
+  longitude: Float?,    // Item location longitude  
+  posted_at: DateTime,  // Creation timestamp
+  
+  // Relations
+  images: ItemImage[],  // Array of item images
+  user: User,          // Owner details
+  _count: {
+    trade_requests_for: Int  // Number of pending trade requests
+  }
+}
+
+ItemImage Model:
+{
+  id: String,          // Image ID
+  item_id: String,     // Parent item reference
+  url: String          // Image file path/URL
+}
+
+Item API Endpoints:
+GET    /api/items                  # Get all items (no pagination, returns all)
+POST   /api/items                 # Create new item (with image upload support)
+GET    /api/items/:itemId         # Get single item with full details
+PUT    /api/items/:itemId         # Update item (with image upload support)
+DELETE /api/items/:itemId         # Delete item (owner only)
+PUT    /api/items/:itemId/status  # Update item status (owner only)
+
+Item Creation Request (multipart/form-data):
+Required Fields:
+- title: String (3-100 characters)
+- description: String (10-1000 characters)
+- category: String (2-50 characters)
+- condition: Enum (NEW/GOOD/FAIR/POOR)
+
+Optional Fields:
+- latitude: Float (-90 to 90)
+- longitude: Float (-180 to 180)
+- images: File[] (max 5 files, 5MB each, JPEG/JPG/PNG/GIF)
+
+Item Update Request (multipart/form-data):
+All fields optional:
+- title, description, category, condition, latitude, longitude
+- newImages: File[] (additional images to add)
+- removeImageIds: String (comma-separated IDs of images to remove)
+
+Query Parameters for GET /items:
+- category: String (filter by category)
+- condition: Enum (NEW/GOOD/FAIR/POOR)
+- latitude: Float (for location-based filtering)
+- longitude: Float (for location-based filtering)
+- search: String (text search in title/description, 1-100 characters)
+- exclude_user: String (exclude items from specific user)
+
+Status Update Request:
+{
+  "status": "AVAILABLE" | "REMOVED"  // Only these statuses allowed for manual update
+}
+
+================================================================================
+🔄 TRADES MODULE
+================================================================================
+
+Trade Request Model:
+{
+  id: String,                    // Primary key
+  requested_item_id: String,     // Item being requested
+  offered_item_id: String,       // Item being offered in exchange
+  requester_id: String,          // User making the request
+  status: Enum,                  // PENDING/ACCEPTED/REJECTED/CANCELLED
+  requested_at: DateTime,        // Request creation time
+  
+  // Relations (included in responses)
+  requested_item: {              // Item being requested
+    id, title, description, images[], user: { id, name, image }
+  },
+  offered_item: {                // Item being offered
+    id, title, description, images[], user: { id, name, image }
+  },
+  requester: {                   // User making request
+    id, name, image
+  }
+}
+
+Trade Model (Created when request is accepted):
+{
+  id: String,                    // Primary key
+  trade_request_id: String,      // Reference to original request
+  requested_item_id: String,     // Item being requested
+  offered_item_id: String,       // Item being offered
+  requester_id: String,          // User who made request
+  owner_id: String,              // User who owns requested item
+  location: String?,             // Meetup location (optional)
+  status: Enum,                  // PENDING/COMPLETED/FAILED/CANCELLED
+  completed_at: DateTime?,       // Completion timestamp
+  created_at: DateTime,          // Creation timestamp
+  
+  // Relations
+  requested_item: Item,          // Full item details
+  offered_item: Item,            // Full item details  
+  requester: User,               // User details
+  owner: User,                   // User details
+  trade_request: {               // Original request
+    requested_at: DateTime
+  }
+}
+
+Trade API Endpoints:
+POST   /api/trades/request           # Create trade request
+POST   /api/trades/accept/:requestId # Accept trade request (item owner only)
+POST   /api/trades/reject/:requestId # Reject trade request (item owner only)
+POST   /api/trades/request/cancel/:requestId # Cancel pending trade request (requester only)
+POST   /api/trades/complete/:tradeId # Complete trade (either party)
+POST   /api/trades/cancel/:tradeId   # Cancel accepted trade (either party)
+GET    /api/trades/my-trades         # Get user's trades (no pagination)
+GET    /api/trades/requests/received # Get received trade requests (no pagination)
+GET    /api/trades/requests/sent     # Get sent trade requests (with pagination)
+
+Trade Request Creation:
+{
+  "requested_item_id": "string",  // Required - Item you want
+  "offered_item_id": "string"     // Required - Item you're offering
+}
+
+Validation Rules:
+- Cannot request your own items
+- Cannot offer items you don't own  
+- Both items must be AVAILABLE status
+- Cannot have duplicate pending requests for same trade
+
+Trade Workflow:
+1. User A creates trade request (offering their item for User B's item)
+2. User B receives request and can accept/reject
+3. If accepted: Trade is created, items status → RESERVED, other requests → REJECTED
+4. Either party can complete the trade (items status → SWAPPED)
+5. Either party can cancel before completion (items status → AVAILABLE)
+
+Trade Status Flow:
+PENDING → COMPLETED (success path)
+PENDING → CANCELLED (cancellation path)
+PENDING → FAILED (system failure)
+
+Item Status Changes:
+- Request created: Items remain AVAILABLE
+- Request accepted: Items become RESERVED  
+- Trade completed: Items become SWAPPED
+- Trade cancelled: Items revert to AVAILABLE
+
+================================================================================
+⭐ RATINGS MODULE
+================================================================================
+
+Rating Model:
+{
+  id: String,              // Primary key
+  trade_id: String,        // Associated completed trade
+  reviewer_id: String,     // User giving the rating
+  reviewee_id: String,     // User receiving the rating
+  rating: Int,             // Rating value (1-5 stars)
+  comment: String?,        // Optional review text (max 500 characters)
+  created_at: DateTime,    // Rating creation time
+  
+  // Relations
+  trade: Trade,            // Trade details
+  reviewer: User,          // Reviewer details
+  reviewee: User           // Reviewee details
+}
+
+Rating API Endpoints:
+POST   /api/ratings              # Create new rating
+PUT    /api/ratings/:ratingId    # Update existing rating (reviewer only)
+DELETE /api/ratings/:ratingId    # Delete rating (reviewer only)
+GET    /api/ratings/user/:userId # Get ratings for specific user
+GET    /api/ratings/stats/:userId # Get user's rating statistics
+
+Rating Creation:
+{
+  "trade_id": "string",      // Required - Must be completed trade
+  "reviewee_id": "string",   // Required - User being rated
+  "rating": 1-5,             // Required - Star rating
+  "comment": "string"        // Optional - Review text (max 500 chars)
+}
+
+Rating Update:
+{
+  "rating": 1-5,             // Optional - New rating
+  "comment": "string"        // Optional - New comment
+}
+
+Rating Statistics Response:
+{
+  "average_rating": 4.2,     // Average of all ratings
+  "total_ratings": 25,       // Total number of ratings
+  "rating_distribution": {   // Count by star rating
+    "5": 10,
+    "4": 8,
+    "3": 4,
+    "2": 2,
+    "1": 1
+  }
+}
+
+Validation Rules:
+- Can only rate users from completed trades
+- Can only rate each trade partner once per trade
+- Rating must be 1-5 integer
+- Comment maximum 500 characters
+
+================================================================================
+📁 FILE UPLOADS
+================================================================================
+
+Image Upload Configuration:
+- Storage Location: Local filesystem (/uploads/items/)
+- Maximum Files: 5 per item
+- Maximum Size: 5MB per file  
+- Allowed Formats: JPEG, JPG, PNG, GIF
+- Field Name: 'images' (for creation), 'newImages' (for updates)
+
+Upload Integration:
+- Integrated with item POST/PUT endpoints
+- Uses multipart/form-data encoding
+- Automatic file validation and processing
+- Generates unique filenames to prevent conflicts
+
+File Validation Rules:
+- File size limit: 5MB per file
+- Total files limit: 5 per request
+- MIME type validation: image/jpeg, image/jpg, image/png, image/gif
+- Automatic file extension validation
+
+Image Response Format:
+{
+  "id": "img_cuid_id",           // Image database ID
+  "item_id": "item_cuid_id",     // Parent item ID
+  "url": "/uploads/items/unique-filename.jpg"  // Relative file path
+}
+
+Error Handling:
+- File too large: 400 error with specific file name
+- Invalid file type: 400 error with allowed types list
+- Too many files: 400 error with limit information
+- Upload failure: 500 error with system message
+
+================================================================================
+🎯 STANDARD RESPONSE FORMAT
+================================================================================
+
+All API endpoints return standardized JSON responses for consistency.
+
+Success Response Structure:
+{
+  "success": true,
+  "status": "success", 
+  "message": "Operation completed successfully",
+  "data": { /* actual response data */ },
+  "timestamp": "2025-08-31T10:00:00.000Z"
+}
+
+Error Response Structure:
+{
+  "success": false,
+  "status": "error",
+  "message": "Human-readable error description", 
+  "errorCode": "MACHINE_READABLE_ERROR_CODE",
+  "timestamp": "2025-08-31T10:00:00.000Z",
+  "statusCode": 400
+}
+
+Validation Error Response:
+{
+  "success": false,
+  "status": "error",
+  "message": "Validation failed",
+  "errorCode": "VALIDATION_ERROR", 
+  "errors": [
+    {
+      "field": "field_name",
+      "message": "Field-specific error message",
+      "value": "submitted_value"
+    }
+  ],
+  "timestamp": "2025-08-31T10:00:00.000Z",
+  "statusCode": 400
+}
+
+Common HTTP Status Codes:
+- 200: Success
+- 201: Created successfully
+- 400: Bad request / Validation error
+- 401: Unauthorized / Authentication required
+- 403: Forbidden / Access denied
+- 404: Not found
+- 409: Conflict / Duplicate resource
+- 500: Internal server error
+
+Standard Success Messages:
+- ITEM_CREATED: "Item created successfully"
+- ITEM_UPDATED: "Item updated successfully"
+- PROFILE_UPDATED: "Profile updated successfully"
+- TRADE_REQUEST_CREATED: "Trade request created successfully"
+
+Standard Error Messages:
+- UNAUTHORIZED: "Authentication required"
+- ACCESS_DENIED: "Access denied"
+- NOT_FOUND: "Resource not found"  
+- VALIDATION_ERROR: "Invalid input data"
+- OPERATION_FAILED: "Operation failed"
+
+================================================================================
+🔍 VALIDATION SCHEMAS
+================================================================================
+
+Input validation is handled by Joi schemas with comprehensive error messages.
+
+Common Field Validations:
+- IDs: String (no format restriction, accepts CUID/UUID/custom)
+- Email: Valid email format required
+- Coordinates: Latitude (-90 to 90), Longitude (-180 to 180)
+- Text fields: Trimmed, length restrictions applied
+- Enums: Strict validation against allowed values
+
+Item Validations:
+- Title: 3-100 characters, required
+- Description: 10-1000 characters, required  
+- Category: 2-50 characters, required
+- Condition: Must be NEW/GOOD/FAIR/POOR, required
+- Coordinates: Valid lat/lng ranges, optional
+
+User Validations:
+- Name: 2-50 characters
+- Email: Valid email format
+- Bio: Max 500 characters
+- Password: Min 6 characters (registration)
+
+Trade Validations:
+- Item IDs: Required, must be valid strings
+- Rating: Integer 1-5, required
+- Comment: Max 500 characters, optional
+
+Query Parameter Validations:
+- Page: Integer ≥ 1, default 1
+- Limit: Integer 1-100, default varies by endpoint
+- Search: 1-100 characters when provided
+- Filters: Valid enum values only
+
+Default Values:
+- Pagination: page=1, limit varies (10-50)
+- Item status filter: AVAILABLE
+- User badge: BRONZE
+- Loyalty points: 0
+
+Validation Error Format:
+Each validation error includes:
+- field: Dot-notation field path
+- message: Human-readable error description  
+- value: The invalid value that was submitted
+
+================================================================================
+🛡️ MIDDLEWARE STACK
+================================================================================
+
+Authentication Middleware:
+- authMiddleware(req, res, next): Requires valid Better-Auth session
+  * Extracts user from session
+  * Updates user's last activity
+  * Returns 401 if no valid session
+  * Attaches req.user for downstream use
+
+- optionalAuthMiddleware(req, res, next): Session optional
+  * Extracts user if session exists
+  * Continues without blocking if no session
+  * Used for public endpoints that enhance with user data
+
+Validation Middleware:
+- validateBody(schema): Validates request body against Joi schema
+  * Strips unknown fields
+  * Applies default values
+  * Type conversion (string to number, etc.)
+  * Returns detailed validation errors
+
+- validateParams(schema): Validates URL parameters (:id, :userId, etc.)
+  * Ensures required path parameters are present
+  * Format validation for IDs and special parameters
+
+- validateQuery(schema): Validates query string parameters  
+  * Applies default values for pagination
+  * Type conversion and format validation
+  * Optional parameter handling
+
+- validateFiles(options): Validates uploaded files
+  * File size limits (default 5MB)
+  * MIME type restrictions
+  * File count limits (default 5)
+  * Comprehensive error messages
+
+File Upload Middleware:
+- multer configuration: Handles multipart/form-data
+  * Unique filename generation using UUID
+  * Storage location: /uploads/items/
+  * Automatic directory creation
+  * Memory and disk storage options
+
+Error Handling Middleware:
+- Global error handler captures all unhandled errors
+- Multer-specific error handling for file uploads
+- Prisma error handling for database issues
+- Standardized error response formatting
+
+Rate Limiting:
+- Basic rate limiting implemented
+- Configurable per endpoint
+- IP-based limiting with whitelist support
+
+================================================================================
+🌐 CORS & SECURITY
+================================================================================
+
+CORS Configuration:
+Allowed Origins:
+- http://localhost:5173 (Vite development server)
+- http://localhost:3000 (Backend server)
+- Production domain (configurable)
+
+CORS Settings:
+- Credentials: Enabled (required for Better-Auth cookies)
+- Methods: GET, POST, PUT, DELETE  
+- Headers: Authorization, Content-Type, Cookie
+- Pre-flight: Automatic handling for complex requests
+
+Security Features:
+- Input Sanitization: All inputs validated and sanitized via Joi
+- File Upload Security: 
+  * MIME type validation
+  * File size limits
+  * Path traversal prevention
+  * Unique filename generation
+
+- Authentication Security:
+  * JWT session tokens
+  * Secure cookie configuration
+  * Session expiry handling
+  * CSRF protection via Better-Auth
+
+- Database Security:
+  * Parameterized queries via Prisma (prevents SQL injection)
+  * Connection pooling and timeout handling
+  * Environment variable protection
+
+Environment Variables:
+- DATABASE_URL: PostgreSQL connection string
+- BETTER_AUTH_SECRET: JWT signing secret
+- BETTER_AUTH_URL: Base URL for auth callbacks
+- PORT: Server port (default 3000)
+
+Security Headers:
+- Content-Type validation
+- Request size limits
+- JSON parsing limits
+- Secure cookie flags in production
+
+================================================================================
+📊 DATABASE RELATIONSHIPS
+================================================================================
+
+Primary Models and Relationships:
+
+User Model (Central entity):
+- One-to-Many with Items (user can own multiple items)
+- One-to-Many with TradeRequests (as requester)
+- One-to-Many with Trades (as requester or owner)
+- One-to-Many with Ratings (as reviewer or reviewee)
+- One-to-Many with SwappedItems (trade history)
+
+Item Model:
+- Many-to-One with User (item owner)
+- One-to-Many with ItemImages (multiple photos per item)
+- One-to-Many with TradeRequests (as requested or offered item)
+- One-to-Many with Trades (as requested or offered item)
+
+TradeRequest Model:  
+- Many-to-One with User (requester)
+- Many-to-One with Item (requested item)
+- Many-to-One with Item (offered item) 
+- One-to-One with Trade (when accepted)
+
+Trade Model:
+- One-to-One with TradeRequest (originating request)
+- Many-to-One with User (requester)
+- Many-to-One with User (owner)
+- Many-to-One with Item (requested item)
+- Many-to-One with Item (offered item)
+- One-to-Many with Ratings (post-trade ratings)
+- One-to-Many with SwappedItems (completion records)
+
+Rating Model:
+- Many-to-One with Trade (rated trade)
+- Many-to-One with User (reviewer)
+- Many-to-One with User (reviewee)
+
+Enums:
+- ItemCondition: NEW, GOOD, FAIR, POOR
+- ItemStatus: AVAILABLE, RESERVED, SWAPPED, REMOVED
+- TradeRequestStatus: PENDING, ACCEPTED, REJECTED, CANCELLED  
+- TradeStatus: PENDING, COMPLETED, FAILED, CANCELLED
+- Badge: BRONZE, SILVER, GOLD, DIAMOND, RUBY
+
+Database Constraints:
+- Unique email addresses for users
+- Unique trade request per item pair
+- One rating per user per trade
+- Cascade deletes for dependent records
+
+Indexing Strategy:
+- Primary keys (automatic)
+- Foreign key indexes
+- Email uniqueness index
+- Trade status queries
+- Item location queries (for geographic search)
+
+================================================================================
+🎨 UI DEVELOPMENT GUIDELINES
+================================================================================
+
+Essential UI Components:
+
+1. Authentication Pages:
+   - Registration Form:
+     * Fields: name, email, password, confirm password
+     * Validation: Real-time validation matching API schemas
+     * Success: Redirect to login or auto-login
+     
+   - Login Form:
+     * Fields: email, password  
+     * Remember me option
+     * Forgot password link
+     * Success: Redirect to dashboard
+
+   - Session Management:
+     * Auto-refresh tokens
+     * Logout functionality
+     * Session timeout handling
+
+2. Dashboard/Home Page:
+   - Items Grid/List View:
+     * Responsive layout (grid on desktop, list on mobile)
+     * Item cards with image, title, condition, location
+     * Pagination or infinite scroll
+     * Loading states and skeletons
+     
+   - Search and Filter Controls:
+     * Text search bar with debouncing
+     * Category dropdown/filter chips  
+     * Condition filter (checkboxes/radio)
+     * Location-based search with map
+     * Clear filters option
+
+3. Item Management:
+   - Item Creation Form:
+     * Multi-step form (details → images → location → review)
+     * Image upload with preview and drag-and-drop
+     * Location picker with map integration
+     * Form validation matching API schemas
+     * Progress indicator
+     
+   - Item Details View:
+     * Image gallery with zoom/lightbox
+     * Owner profile preview
+     * Trade request button (if not owner)
+     * Share functionality
+     * Report item option
+     
+   - My Items Management:
+     * Items dashboard with status indicators
+     * Quick status updates (available/removed)
+     * Edit item functionality
+     * Delete confirmation modals
+     * Trade requests received
+
+4. Trading Interface:
+   - Trade Request Creation:
+     * Item selection (your items → their item)
+     * Preview both items side-by-side
+     * Optional message field
+     * Confirmation step
+     
+   - Trade Requests Management:
+     * Incoming requests (accept/reject)
+     * Outgoing requests (cancel option)
+     * Trade status tracking
+     * Real-time updates (WebSocket/polling)
+     
+   - Active Trades Dashboard:
+     * Trade progress indicator
+     * Meetup location setting
+     * Complete trade button
+     * Cancel trade with confirmation
+     * Communication thread
+
+5. User Profile System:
+   - Profile View/Edit:
+     * Avatar upload with cropping
+     * Bio text editor
+     * Location picker with map
+     * Privacy settings
+     * Account settings
+     
+   - Public Profile View:
+     * User stats (items, completed trades, rating)
+     * Rating/review display
+     * Recent items
+     * Trade history (if public)
+     
+   - Rating System:
+     * Star rating component
+     * Review text editor
+     * Rating submission
+     * Rating display with filtering
+
+6. Map Integration:
+   - Location Picker:
+     * Interactive map with search
+     * Current location detection
+     * Address autocomplete
+     * Coordinate display
+     
+   - Items Map View:
+     * Clustered item markers
+     * Filter integration
+     * Info windows with item preview
+     * Distance calculation
+
+Advanced UI Features:
+- Dark/Light theme toggle
+- Responsive design (mobile-first)
+- Progressive Web App (PWA) support
+- Push notifications for trade updates
+- Image optimization and lazy loading
+- Accessibility compliance (WCAG)
+- Multi-language support preparation
+
+State Management Structure:
+```javascript
+// Global State
+{
+  auth: {
+    user: User | null,
+    isAuthenticated: boolean,
+    isLoading: boolean,
+    error: string | null
+  },
+  items: {
+    list: Item[],
+    filters: FilterState,
+    searchTerm: string,
+    isLoading: boolean,
+    pagination: PaginationState
+  },
+  trades: {
+    myTrades: Trade[],
+    receivedRequests: TradeRequest[],
+    sentRequests: TradeRequest[],
+    activeStatuses: Map<string, string>
+  },
+  ui: {
+    theme: 'light' | 'dark',
+    modals: { [key: string]: boolean },
+    notifications: Notification[],
+    isOnline: boolean
+  }
+}
+```
+
+API Integration Best Practices:
+- Use axios or fetch with interceptors
+- Implement request/response logging
+- Handle network errors gracefully
+- Show loading states for all operations
+- Cache frequently accessed data
+- Implement optimistic updates where appropriate
+- Use debouncing for search inputs
+- Handle file uploads with progress indicators
+
+Error Handling Strategy:
+- Global error boundary for React apps
+- Toast notifications for user actions
+- Form validation matching API schemas
+- Network error detection and retry
+- Fallback UI for failed data loads
+- User-friendly error messages
+
+Performance Optimization:
+- Image lazy loading and optimization
+- Virtual scrolling for large lists
+- Memoization of expensive calculations
+- Code splitting for route-based loading
+- Service worker for caching
+- Minimize API calls with smart caching
+
+================================================================================
+🚀 GETTING STARTED
+================================================================================
+
+Development Server:
+- Base URL: http://localhost:5000/api
+- Health Check: http://localhost:5000/api/health
+- API Documentation: http://localhost:5000/api-docs
+- Swagger JSON: http://localhost:5000/api-docs.json
+
+Environment Setup:
+1. Clone repository
+2. Install dependencies: npm install
+3. Set environment variables (.env file)
+4. Run database migrations: npx prisma migrate dev
+5. Start development server: npm run dev
+
+Required Environment Variables:
+- DATABASE_URL: PostgreSQL connection string
+- BETTER_AUTH_SECRET: Random secret key for JWT signing
+- BETTER_AUTH_URL: http://localhost:5000 (or your base URL)
+- PORT: 5000 (or desired port)
+
+Database Setup:
+1. Create PostgreSQL database
+2. Update DATABASE_URL in .env
+3. Run: npx prisma db push (to sync schema)
+4. Run: npx prisma generate (to generate client)
+
+Testing the API:
+- Use Postman, Insomnia, or similar API client
+- Import OpenAPI spec from /api-docs.json
+- Test authentication flow first
+- Verify all CRUD operations
+- Test file upload functionality
+
+Frontend Integration:
+- Set axios base URL to http://localhost:5000/api
+- Configure CORS for your frontend domain
+- Handle Better-Auth session cookies
+- Implement error handling for all endpoints
+- Test file upload with multipart forms
+
+Common Development Issues:
+- CORS errors: Check allowed origins in server.js
+- Authentication issues: Verify Better-Auth configuration
+- File upload problems: Check multer configuration and file permissions
+- Database connection: Verify PostgreSQL is running and URL is correct
+- Validation errors: Compare request format with API schemas
+
+Production Deployment:
+- Set production environment variables
+- Configure production database
+- Set up file storage (consider cloud storage)
+- Configure production CORS origins
+- Enable HTTPS for secure authentication
+- Set up monitoring and logging
+- Configure backup strategies
+
+================================================================================
+📞 SUPPORT & DOCUMENTATION
+================================================================================
+
+For additional support:
+- API Documentation: http://localhost:5000/api-docs (when server is running)
+- Database Schema: Check /prisma/schema.prisma
+- Validation Rules: Check /validation/*.js files
+- Service Logic: Check /services/*.js files
+
+This documentation covers the complete Swappo API system for building a comprehensive trading platform UI.
+
+Last Updated: August 31, 2025
+Version: 1.0.0
+================================================================================

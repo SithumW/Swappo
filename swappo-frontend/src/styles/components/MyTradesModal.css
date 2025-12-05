@@ -1,0 +1,504 @@
+
+
+.my-trades-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.my-trades-modal-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.my-trades-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+
+.my-trades-tabs {
+  display: flex;
+  background-color: var(--muted-background, #f3f4f6);
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+}
+
+.my-trades-tab {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.my-trades-tab.active {
+  background-color: var(--background-color, #ffffff);
+  color: var(--foreground, #1f2937);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+.my-trades-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.my-trades-loading-content {
+  text-align: center;
+}
+
+.my-trades-loading-spinner {
+  height: 2rem;
+  width: 2rem;
+  margin: 0 auto 0.5rem;
+  color: var(--primary-color, #2563eb);
+  animation: spin 1s linear infinite;
+}
+
+.my-trades-loading-text {
+  color: var(--muted-foreground, #6b7280);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
+.my-trades-empty {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.my-trades-empty-icon {
+  height: 4rem;
+  width: 4rem;
+  color: var(--muted-foreground, #6b7280);
+  margin: 0 auto 1rem;
+}
+
+.my-trades-empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.my-trades-empty-description {
+  color: var(--muted-foreground, #6b7280);
+}
+
+
+.my-trades-card {
+  background: var(--card-color, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.my-trades-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.my-trades-card-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.my-trades-card-date {
+  font-size: 0.875rem;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.my-trades-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+}
+
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-accepted {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-completed {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
+.status-rejected {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-cancelled {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.status-failed {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.my-trades-status-icon {
+  height: 1rem;
+  width: 1rem;
+}
+
+
+.my-trades-items-layout {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.my-trades-item-card {
+  background-color: var(--muted-background, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+.my-trades-item-card.my-item {
+  background-color: rgba(37, 99, 235, 0.05);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.my-trades-item-card.their-item {
+  background-color: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.my-trades-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.my-trades-item-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.my-trades-item-label.my-item {
+  color: var(--primary-color, #2563eb);
+}
+
+.my-trades-item-label.their-item {
+  color: #10b981;
+}
+
+.my-trades-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.my-trades-item-image {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.375rem;
+  object-fit: cover;
+  background-color: var(--muted-background, #f3f4f6);
+}
+
+.my-trades-item-image-placeholder {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.375rem;
+  background-color: var(--muted-background, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.my-trades-item-image-placeholder-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.my-trades-item-details {
+  flex: 1;
+}
+
+.my-trades-item-title {
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.my-trades-item-condition {
+  font-size: 0.75rem;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.my-trades-item-view-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background-color: transparent;
+  color: var(--primary-color, #2563eb);
+  border: 1px solid var(--primary-color, #2563eb);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.my-trades-item-view-btn:hover {
+  background-color: var(--primary-color, #2563eb);
+  color: white;
+}
+
+.my-trades-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.my-trades-arrow-icon {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+
+.my-trades-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: var(--muted-background, #f9fafb);
+  border-radius: 0.375rem;
+}
+
+.my-trades-user-avatar {
+  height: 2rem;
+  width: 2rem;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.my-trades-user-avatar-image {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.my-trades-user-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: var(--muted-background, #f3f4f6);
+  color: var(--muted-foreground, #6b7280);
+  font-size: 0.75rem;
+}
+
+.my-trades-user-details {
+  flex: 1;
+}
+
+.my-trades-user-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.my-trades-user-badge {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+}
+
+.my-trades-user-role {
+  font-size: 0.75rem;
+  color: var(--muted-foreground, #6b7280);
+}
+
+
+.my-trades-contact-section {
+  background-color: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin: 1rem 0;
+}
+
+.my-trades-contact-title {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #065f46;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.my-trades-contact-icon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.my-trades-contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.my-trades-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #047857;
+}
+
+.my-trades-contact-item-icon {
+  height: 0.875rem;
+  width: 0.875rem;
+}
+
+
+.my-trades-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.my-trades-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.my-trades-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.my-trades-action-btn.accept {
+  background-color: #10b981;
+  color: white;
+}
+
+.my-trades-action-btn.accept:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.my-trades-action-btn.reject {
+  background-color: #dc2626;
+  color: white;
+}
+
+.my-trades-action-btn.reject:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.my-trades-action-btn.cancel {
+  background-color: #6b7280;
+  color: white;
+}
+
+.my-trades-action-btn.cancel:hover:not(:disabled) {
+  background-color: #4b5563;
+}
+
+.my-trades-action-btn.complete {
+  background-color: var(--primary-color, #2563eb);
+  color: white;
+}
+
+.my-trades-action-btn.complete:hover:not(:disabled) {
+  background-color: var(--primary-hover, #1d4ed8);
+}
+
+.my-trades-action-btn.reveal {
+  background-color: #10b981;
+  color: white;
+}
+
+.my-trades-action-btn.reveal:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.my-trades-action-btn-icon {
+  height: 1rem;
+  width: 1rem;
+  margin-right: 0.5rem;
+}
+
+
+
+
+.my-trades-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.my-trades-close-btn {
+  background-color: transparent;
+  color: var(--foreground, #1f2937);
+  border: 1px solid var(--border-color, #d1d5db);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.my-trades-close-btn:hover {
+  background-color: var(--muted-background, #f3f4f6);
+}
+
+
+.badge-bronze { background-color: #d97706; }
+.badge-silver { background-color: #64748b; }
+.badge-gold { background-color: #eab308; }
+.badge-diamond { background-color: #06b6d4; }
+.badge-ruby { background-color: #dc2626; }
